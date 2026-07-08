@@ -1261,135 +1261,212 @@
           top: 80px;
           right: 20px;
           z-index: 99999;
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-          border-radius: 12px;
-          padding: 16px;
-          box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+          width: 292px;
+          background: rgba(22, 24, 32, 0.94);
+          backdrop-filter: blur(14px);
+          border: 1px solid rgba(255,255,255,0.12);
+          border-radius: 18px;
+          padding: 14px;
+          box-shadow: 0 14px 42px rgba(0,0,0,0.34);
           font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
           font-size: 13px;
-          color: #fff;
-          min-width: 240px;
-          transition: all 0.3s ease;
+          color: #f7f7fb;
+          transition: box-shadow 0.2s ease, opacity 0.2s ease, transform 0.2s ease;
           will-change: left, top;
           touch-action: none;
         }
-        #linuxdo-auto-panel.minimized {
-          min-width: 150px;
-          padding: 10px 12px;
-        }
-        #linuxdo-auto-panel.minimized .panel-content {
-          display: none;
-        }
-        #linuxdo-auto-panel h3 {
-          margin: 0 0 12px 0;
-          font-size: 15px;
-          font-weight: 600;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          gap: 16px;
-          cursor: move;
-          user-select: none;
-          white-space: nowrap;
-        }
+
         #linuxdo-auto-panel.dragging {
           transition: none !important;
           cursor: grabbing;
-          opacity: 0.95;
+          opacity: 0.96;
+          box-shadow: 0 18px 54px rgba(0,0,0,0.46);
         }
 
         #linuxdo-auto-panel.dragging * {
           user-select: none;
         }
-        #linuxdo-auto-panel .btn-minimize {
-          background: rgba(255,255,255,0.2);
-          border: none;
-          color: #fff;
-          width: 24px;
-          height: 24px;
-          border-radius: 50%;
-          cursor: pointer;
+
+        #linuxdo-auto-panel.minimized {
+          width: 188px;
+          padding: 10px 12px;
+          border-radius: 999px;
+        }
+
+        #linuxdo-auto-panel.minimized .panel-content {
+          display: none;
+        }
+
+        #linuxdo-auto-panel.minimized h3 {
+          margin: 0;
+        }
+
+        #linuxdo-auto-panel h3 {
+          margin: 0 0 12px 0;
           font-size: 14px;
-        }
-        #linuxdo-auto-panel button.action-btn {
-          width: 100%;
-          padding: 10px;
-          margin: 5px 0;
-          border: none;
-          border-radius: 8px;
-          cursor: pointer;
-          font-size: 13px;
-          font-weight: 500;
-          transition: all 0.2s ease;
-        }
-        #linuxdo-auto-panel .speed-selector {
+          font-weight: 700;
           display: flex;
           align-items: center;
-          margin-bottom: 10px;
-          gap: 8px;
-        }
-        #linuxdo-auto-panel .speed-label {
-          font-size: 12px;
-          opacity: 0.9;
-        }
-        #linuxdo-auto-panel .speed-buttons {
-          display: flex;
-          gap: 4px;
-          flex: 1;
-        }
-        #linuxdo-auto-panel .speed-btn {
-          flex: 1;
-          padding: 5px 8px;
-          border: none;
-          border-radius: 4px;
-          background: rgba(255,255,255,0.2);
-          color: #fff;
-          font-size: 11px;
-          cursor: pointer;
-          transition: all 0.2s;
-        }
-        #linuxdo-auto-panel .speed-btn:hover {
-          background: rgba(255,255,255,0.3);
-        }
-        #linuxdo-auto-panel .speed-btn.active {
-          background: #4CAF50;
-          font-weight: 600;
-        }
-        #linuxdo-auto-panel .btn-start { background: #4CAF50; color: white; }
-        #linuxdo-auto-panel .btn-start:hover { background: #43A047; }
-        #linuxdo-auto-panel .btn-stop { background: #f44336; color: white; }
-        #linuxdo-auto-panel .btn-stop:hover { background: #E53935; }
-        #linuxdo-auto-panel .btn-clear { background: #FF9800; color: white; font-size: 12px; padding: 6px; }
-        #linuxdo-auto-panel .stats {
-          margin-top: 12px;
-          padding: 10px;
-          background: rgba(255,255,255,0.15);
-          border-radius: 8px;
-        }
-        #linuxdo-auto-panel .stats-row {
-          display: flex;
           justify-content: space-between;
-          margin: 4px 0;
-          font-size: 12px;
+          gap: 14px;
+          cursor: move;
+          user-select: none;
+          white-space: nowrap;
         }
-        #linuxdo-auto-panel .stats-label { opacity: 0.9; }
-        #linuxdo-auto-panel .stats-value { font-weight: 600; }
-        #linuxdo-auto-panel .status-indicator {
-          display: inline-block;
+
+        #linuxdo-auto-panel .panel-title {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          min-width: 0;
+        }
+
+        #linuxdo-auto-panel .panel-title-text {
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        #linuxdo-auto-panel .status-dot-mini {
           width: 8px;
           height: 8px;
           border-radius: 50%;
-          margin-right: 6px;
+          background: #ef4444;
+          flex: 0 0 auto;
         }
-        #linuxdo-auto-panel .status-indicator.running {
-          background: #4CAF50;
-          animation: pulse 1.5s infinite;
+
+        #linuxdo-auto-panel.running .status-dot-mini {
+          background: #22c55e;
+          box-shadow: 0 0 0 4px rgba(34,197,94,0.14);
         }
-        #linuxdo-auto-panel .status-indicator.stopped { background: #f44336; }
-        @keyframes pulse {
-          0%, 100% { opacity: 1; }
-          50% { opacity: 0.5; }
+
+        #linuxdo-auto-panel .btn-minimize {
+          background: rgba(255,255,255,0.1);
+          border: 1px solid rgba(255,255,255,0.1);
+          color: #fff;
+          min-width: 28px;
+          height: 28px;
+          border-radius: 999px;
+          cursor: pointer;
+          font-size: 16px;
+          line-height: 1;
         }
+
+        #linuxdo-auto-panel .btn-minimize:hover {
+          background: rgba(255,255,255,0.18);
+        }
+
+        #linuxdo-auto-panel .section {
+          margin-top: 10px;
+          padding-top: 10px;
+          border-top: 1px solid rgba(255,255,255,0.09);
+        }
+
+        #linuxdo-auto-panel .section-title {
+          font-size: 12px;
+          color: rgba(255,255,255,0.58);
+          margin-bottom: 8px;
+        }
+
+        #linuxdo-auto-panel .summary {
+          display: grid;
+          grid-template-columns: 1fr auto auto;
+          gap: 8px;
+          align-items: center;
+          background: rgba(255,255,255,0.07);
+          border: 1px solid rgba(255,255,255,0.08);
+          border-radius: 14px;
+          padding: 10px;
+        }
+
+        #linuxdo-auto-panel .summary-status {
+          display: flex;
+          align-items: center;
+          gap: 7px;
+          font-weight: 600;
+        }
+
+        #linuxdo-auto-panel .summary-stat {
+          color: rgba(255,255,255,0.78);
+          font-size: 12px;
+        }
+
+        #linuxdo-auto-panel .speed-selector {
+          display: grid;
+          grid-template-columns: 44px 1fr;
+          align-items: center;
+          gap: 8px;
+          margin-bottom: 8px;
+        }
+
+        #linuxdo-auto-panel .speed-label {
+          font-size: 12px;
+          color: rgba(255,255,255,0.66);
+        }
+
+        #linuxdo-auto-panel .speed-buttons {
+          display: flex;
+          gap: 5px;
+        }
+
+        #linuxdo-auto-panel .speed-btn {
+          flex: 1;
+          padding: 6px 7px;
+          border: 1px solid rgba(255,255,255,0.1);
+          border-radius: 10px;
+          background: rgba(255,255,255,0.07);
+          color: rgba(255,255,255,0.86);
+          font-size: 12px;
+          cursor: pointer;
+          transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+        }
+
+        #linuxdo-auto-panel .speed-btn:hover {
+          background: rgba(255,255,255,0.13);
+        }
+
+        #linuxdo-auto-panel .speed-btn.active {
+          background: linear-gradient(135deg, #22c55e, #16a34a);
+          border-color: rgba(255,255,255,0.18);
+          color: #fff;
+          font-weight: 700;
+        }
+
+        #linuxdo-auto-panel button.action-btn {
+          width: 100%;
+          padding: 10px 12px;
+          margin-top: 8px;
+          border: none;
+          border-radius: 12px;
+          cursor: pointer;
+          font-size: 13px;
+          font-weight: 700;
+          transition: transform 0.15s ease, opacity 0.15s ease;
+        }
+
+        #linuxdo-auto-panel button.action-btn:hover {
+          transform: translateY(-1px);
+        }
+
+        #linuxdo-auto-panel .btn-start {
+          background: linear-gradient(135deg, #22c55e, #16a34a);
+          color: white;
+        }
+
+        #linuxdo-auto-panel .btn-stop {
+          background: linear-gradient(135deg, #ef4444, #dc2626);
+          color: white;
+        }
+
+        #linuxdo-auto-panel .btn-clear {
+          background: rgba(255,255,255,0.1);
+          color: rgba(255,255,255,0.9);
+          border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        #linuxdo-auto-panel .stats {
+          display: none;
+        }
+
         .auto-viewed { opacity: 0.6; }
       `;
       document.head.appendChild(style);
@@ -1398,12 +1475,26 @@
       panel.id = 'linuxdo-auto-panel';
       panel.innerHTML = `
         <h3>
-          <span>Linux.do 自动浏览助手</span>
+          <span class="panel-title">
+            <span class="status-dot-mini"></span>
+            <span class="panel-title-text">Linux.do 助手</span>
+          </span>
           <button class="btn-minimize" id="btn-minimize">-</button>
         </h3>
         <div class="panel-content">
-          <div class="speed-selector">
-            <span class="speed-label">速度:</span>
+          <div class="summary">
+            <span class="summary-status">
+              <span class="status-dot-mini"></span>
+              <span id="auto-status">未启动</span>
+            </span>
+            <span class="summary-stat">浏览 <b id="total-viewed">0</b></span>
+            <span class="summary-stat">点赞 <b id="total-liked">0</b></span>
+          </div>
+
+          <div class="section">
+            <div class="section-title">浏览设置</div>
+            <div class="speed-selector">
+              <span class="speed-label">速度</span>
             <div class="speed-buttons">
               <button class="speed-btn ${currentSpeed === 'slow' ? 'active' : ''}" data-speed="slow">慢</button>
               <button class="speed-btn ${currentSpeed === 'normal' ? 'active' : ''}" data-speed="normal">正常</button>
@@ -1411,16 +1502,16 @@
               <button class="speed-btn ${currentSpeed === 'turbo' ? 'active' : ''}" data-speed="turbo">极速</button>
             </div>
           </div>
-          <div class="speed-selector">
-            <span class="speed-label">列表:</span>
+            <div class="speed-selector">
+              <span class="speed-label">列表</span>
             <div class="speed-buttons">
               <button class="speed-btn list-btn ${currentList === 'latest' ? 'active' : ''}" data-list="latest">最新</button>
               <button class="speed-btn list-btn ${currentList === 'new' ? 'active' : ''}" data-list="new">新帖</button>
               <button class="speed-btn list-btn ${currentList === 'unread' ? 'active' : ''}" data-list="unread">未读</button>
             </div>
           </div>
-          <div class="speed-selector">
-            <span class="speed-label">浏览:</span>
+            <div class="speed-selector">
+              <span class="speed-label">浏览</span>
             <div class="speed-buttons">
               <button class="speed-btn browse-mode-btn ${currentBrowseMode === 'all' ? 'active' : ''}" data-mode="all">全部</button>
               <button class="speed-btn browse-mode-btn ${currentBrowseMode === 'posts' ? 'active' : ''}" data-mode="posts">楼层</button>
@@ -1428,31 +1519,35 @@
               <button class="speed-btn browse-mode-btn ${currentBrowseMode === 'smart' ? 'active' : ''}" data-mode="smart">智能</button>
             </div>
           </div>
-          <div class="speed-selector">
-            <span class="speed-label">楼层:</span>
+            <div class="speed-selector">
+              <span class="speed-label">楼层</span>
             <div class="speed-buttons">
               <button class="speed-btn post-limit-btn ${currentPostLimit === '20' ? 'active' : ''}" data-post-limit="20">20</button>
               <button class="speed-btn post-limit-btn ${currentPostLimit === '40' ? 'active' : ''}" data-post-limit="40">40</button>
               <button class="speed-btn post-limit-btn ${currentPostLimit === '80' ? 'active' : ''}" data-post-limit="80">80</button>
             </div>
           </div>
-          <div class="speed-selector">
-            <span class="speed-label">时间:</span>
+            <div class="speed-selector">
+              <span class="speed-label">时间</span>
             <div class="speed-buttons">
               <button class="speed-btn time-limit-btn ${currentTimeLimit === '30' ? 'active' : ''}" data-time-limit="30">30秒</button>
               <button class="speed-btn time-limit-btn ${currentTimeLimit === '60' ? 'active' : ''}" data-time-limit="60">60秒</button>
               <button class="speed-btn time-limit-btn ${currentTimeLimit === '120' ? 'active' : ''}" data-time-limit="120">120秒</button>
             </div>
           </div>
-          <div class="speed-selector">
-            <span class="speed-label">点赞:</span>
+          </div>
+
+          <div class="section">
+            <div class="section-title">点赞设置</div>
+            <div class="speed-selector">
+              <span class="speed-label">点赞</span>
             <div class="speed-buttons">
               <button class="speed-btn like-btn ${enableLike ? 'active' : ''}" data-like="true">开启</button>
               <button class="speed-btn like-btn ${!enableLike ? 'active' : ''}" data-like="false">关闭</button>
             </div>
           </div>
-          <div class="speed-selector">
-            <span class="speed-label">点赞概率:</span>
+            <div class="speed-selector">
+              <span class="speed-label">概率</span>
             <div class="speed-buttons">
               <button class="speed-btn chance-btn ${currentLikeChance === 'low' ? 'active' : ''}" data-chance="low">低</button>
               <button class="speed-btn chance-btn ${currentLikeChance === 'medium' ? 'active' : ''}" data-chance="medium">中</button>
@@ -1463,23 +1558,6 @@
           <button class="action-btn btn-start" id="btn-auto-start">开始自动浏览</button>
           <button class="action-btn btn-stop" id="btn-auto-stop" style="display:none;">停止运行</button>
           <button class="action-btn btn-clear" id="btn-clear-history">清除浏览记录</button>
-          <div class="stats">
-            <div class="stats-row">
-              <span class="stats-label">状态</span>
-              <span class="stats-value">
-                <span class="status-indicator stopped" id="status-dot"></span>
-                <span id="auto-status">未启动</span>
-              </span>
-            </div>
-            <div class="stats-row">
-              <span class="stats-label">总浏览帖子</span>
-              <span class="stats-value" id="total-viewed">0</span>
-            </div>
-            <div class="stats-row">
-              <span class="stats-label">总点赞</span>
-              <span class="stats-value" id="total-liked">0</span>
-            </div>
-          </div>
         </div>
       `;
 
@@ -1673,7 +1751,7 @@
       document.getElementById('btn-auto-start').style.display = 'none';
       document.getElementById('btn-auto-stop').style.display = 'block';
       document.getElementById('auto-status').textContent = '运行中';
-      document.getElementById('status-dot').className = 'status-indicator running';
+      this.panel?.classList.add('running');
 
       // 启动卡住检测
       this.startStuckDetection();
@@ -1748,7 +1826,7 @@
       document.getElementById('btn-auto-start').style.display = 'block';
       document.getElementById('btn-auto-stop').style.display = 'none';
       document.getElementById('auto-status').textContent = '已停止';
-      document.getElementById('status-dot').className = 'status-indicator stopped';
+      this.panel?.classList.remove('running');
     }
 
     clearHistory() {
