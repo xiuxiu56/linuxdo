@@ -1675,7 +1675,8 @@
           </div>
           <div class="action-section">
             <button class="action-btn btn-start" id="btn-auto-start">开始自动浏览</button>
-            <button class="action-btn btn-stop" id="bn-clear" id="btn-clear-history">清除浏览记录</button>
+            <button class="action-btn btn-stop" id="btn-auto-stop" style="display:none;">停止运行</button>
+            <button class="action-btn btn-clear" id="btn-clear-history">清除浏览记录</button>
           </div>
         </div>
       `;
