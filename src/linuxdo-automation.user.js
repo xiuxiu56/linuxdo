@@ -79,7 +79,7 @@
   const LIST_OPTIONS = {
     latest: { name: '最新', path: '/latest' },
     new: { name: '新帖', path: '/new' },
-    unread: { name: '未读', path: '/unread' }
+    unread: { name: '未读', path: '/unseen' }
   };
   let currentList = 'latest';
 
@@ -284,9 +284,9 @@
   function getPageType() {
     const path = window.location.pathname;
     if (path.match(/^\/t\/topic\/\d+/)) return 'topic';
-    if (path === '/latest' || path === '/new' || path === '/unread' ||
+    if (path === '/latest' || path === '/new' || path === '/unseen' ||
         path === '/' || path === '/top' || path === '/hot' ||
-        path.startsWith('/c/')) return 'list';
+        path.startsWith('/c/') || path.startsWith('/tag/')) return 'list';
     return 'other';
   }
 
@@ -297,6 +297,31 @@
 
   function getCurrentTopicId() {
     return getTopicIdFromUrl(window.location.pathname);
+  }
+
+  function getNormalizedListBase(path = window.location.pathname) {
+    if (!path || path === '/' || path === '/latest' || path === '/new' || path === '/unseen') {
+      return '';
+    }
+
+    return path
+      .replace(/\/l\/(latest|new|unseen)\/?$/, '')
+      .replace(/\/$/, '');
+  }
+
+  function getListPathFor(listType, sourcePath = null) {
+    const rawPath = sourcePath || Storage.get('last_list_path', window.location.pathname);
+    const base = getNormalizedListBase(rawPath);
+
+    if (!base) {
+      return LIST_OPTIONS[listType]?.path || '/latest';
+    }
+
+    if (listType === 'latest') return base;
+    if (listType === 'new') return `${base}/l/new`;
+    if (listType === 'unread') return `${base}/l/unseen`;
+
+    return base;
   }
 
   // ==================== 存储管理 ====================
@@ -811,8 +836,8 @@
       log('准备返回话题列表...');
       await randomDelay(CONFIG.returnToListDelay, CONFIG.returnToListDelay * 1.5);
 
-      // 使用用户选择的列表
-      const returnUrl = LIST_OPTIONS[currentList]?.path || '/latest';
+      // 根据进入帖子前的列表路径返回，支持 /latest /new /unseen 和 /tag/.../l/new 等
+      const returnUrl = getListPathFor(currentList);
 
       log(`返回列表: ${returnUrl}`);
       window.location.href = returnUrl;
@@ -923,6 +948,9 @@
           return false;
         }
 
+        // 记录当前列表路径，返回时继续留在当前 tag/category/list
+        Storage.set('last_list_path', window.location.pathname);
+
         // 快速滚动到链接位置
         titleLink.scrollIntoView({ behavior: 'auto', block: 'center' });
         await randomDelay(300, 600);
@@ -953,8 +981,8 @@
     }
 
     async switchToAnotherList() {
-      // 使用用户选择的列表
-      const targetList = LIST_OPTIONS[currentList]?.path || '/latest';
+      // 根据当前列表路径刷新，支持 tag/category 内切换
+      const targetList = getListPathFor(currentList, window.location.pathname);
       log(`当前列表已浏览完，刷新列表: ${targetList}`);
       await randomDelay(1000, 2000);
       window.location.href = targetList;
@@ -1097,9 +1125,9 @@
       try {
         const path = new URL(url).pathname;
         if (path.match(/^\/t\/topic\/\d+/)) return 'topic';
-        if (path === '/latest' || path === '/new' || path === '/unread' ||
+        if (path === '/latest' || path === '/new' || path === '/unseen' ||
             path === '/' || path === '/top' || path === '/hot' ||
-            path.startsWith('/c/')) return 'list';
+            path.startsWith('/c/') || path.startsWith('/tag/')) return 'list';
         return 'other';
       } catch (e) {
         return 'other';
@@ -1522,6 +1550,17 @@
 
       const pageType = getPageType();
       log(`当前页面: ${pageType}`);
+
+      // 如果当前在列表页，先跳转到用户选择的列表类型
+      if (pageType === 'list') {
+        const targetListUrl = getListPathFor(currentList, window.location.pathname);
+        if (window.location.pathname !== targetListUrl) {
+          log(`切换到选择的列表: ${targetListUrl}`);
+          Storage.set('last_list_path', targetListUrl);
+          window.location.href = targetListUrl;
+          return;
+        }
+      }
 
       try {
         if (pageType === 'topic') {
