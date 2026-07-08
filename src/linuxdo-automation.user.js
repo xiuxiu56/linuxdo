@@ -1251,6 +1251,7 @@
         }, 3000);
       }
       this.updateStats();
+      this.setRunningUI(Storage.get('auto_running', false));
     }
 
     createControlPanel() {
@@ -1738,6 +1739,20 @@
       });
     }
 
+    setRunningUI(running, text = null) {
+      const startBtn = document.getElementById('btn-auto-start');
+      const stopBtn = document.getElementById('btn-auto-stop');
+      const statusEl = document.getElementById('auto-status');
+
+      if (startBtn) startBtn.style.display = running ? 'none' : 'block';
+      if (stopBtn) stopBtn.style.display = running ? 'block' : 'none';
+      if (statusEl) statusEl.textContent = text || (running ? '运行中' : '已停止');
+
+      if (this.panel) {
+        this.panel.classList.toggle('running', running);
+      }
+    }
+
     updateStats() {
       const stats = this.history.getStats();
       document.getElementById('total-viewed').textContent = stats.totalViewed;
@@ -1748,10 +1763,7 @@
       this.isEnabled = true;
       Storage.set('auto_running', true);
 
-      document.getElementById('btn-auto-start').style.display = 'none';
-      document.getElementById('btn-auto-stop').style.display = 'block';
-      document.getElementById('auto-status').textContent = '运行中';
-      this.panel?.classList.add('running');
+      this.setRunningUI(true, '运行中');
 
       // 启动卡住检测
       this.startStuckDetection();
@@ -1797,7 +1809,7 @@
         // 出错后等待一段时间再重试
         if (this.isEnabled) {
           log('5秒后自动重试...');
-          document.getElementById('auto-status').textContent = '出错，重试中...';
+          this.setRunningUI(true, '出错，重试中...');
           await randomDelay(5000, 8000);
           if (this.isEnabled) {
             log('重新开始...');
@@ -1823,10 +1835,7 @@
       this.topicBrowser?.stop();
       this.listBrowser?.stop();
 
-      document.getElementById('btn-auto-start').style.display = 'block';
-      document.getElementById('btn-auto-stop').style.display = 'none';
-      document.getElementById('auto-status').textContent = '已停止';
-      this.panel?.classList.remove('running');
+      this.setRunningUI(false, '已停止');
     }
 
     clearHistory() {
