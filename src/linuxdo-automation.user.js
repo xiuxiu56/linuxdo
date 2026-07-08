@@ -95,6 +95,28 @@
   };
   let currentLikeChance = 'medium';
 
+  const BROWSE_MODE_OPTIONS = {
+    all: { name: '全部' },
+    posts: { name: '楼层' },
+    time: { name: '时间' },
+    smart: { name: '智能' }
+  };
+  let currentBrowseMode = 'smart';
+
+  const POST_LIMIT_OPTIONS = {
+    20: { name: '20楼', value: 20 },
+    40: { name: '40楼', value: 40 },
+    80: { name: '80楼', value: 80 }
+  };
+  let currentPostLimit = '40';
+
+  const TIME_LIMIT_OPTIONS = {
+    30: { name: '30秒', value: 30 },
+    60: { name: '60秒', value: 60 },
+    120: { name: '120秒', value: 120 }
+  };
+  let currentTimeLimit = '60';
+
   const CONFIG = {
     // 动态从速度预设获取
     get scrollStep() { return SPEED_PRESETS[currentSpeed].scrollStep; },
@@ -203,6 +225,30 @@
     }
   }
 
+  function setBrowseMode(mode) {
+    if (BROWSE_MODE_OPTIONS[mode]) {
+      currentBrowseMode = mode;
+      Storage.set('browse_mode', mode);
+      log(`帖子浏览模式设置为: ${BROWSE_MODE_OPTIONS[mode].name}`);
+    }
+  }
+
+  function setPostLimit(limit) {
+    if (POST_LIMIT_OPTIONS[limit]) {
+      currentPostLimit = limit;
+      Storage.set('post_limit', limit);
+      log(`楼层浏览数量设置为: ${POST_LIMIT_OPTIONS[limit].name}`);
+    }
+  }
+
+  function setTimeLimit(limit) {
+    if (TIME_LIMIT_OPTIONS[limit]) {
+      currentTimeLimit = limit;
+      Storage.set('time_limit', limit);
+      log(`时间浏览秒数设置为: ${TIME_LIMIT_OPTIONS[limit].name}`);
+    }
+  }
+
   // ==================== 工具函数 ====================
 
   function log(...args) {
@@ -287,6 +333,9 @@
   currentList = Storage.get('list_type', 'latest');
   enableLike = Storage.get('enable_like', true);
   currentLikeChance = Storage.get('like_chance', 'medium');
+  currentBrowseMode = Storage.get('browse_mode', 'smart');
+  currentPostLimit = Storage.get('post_limit', '40');
+  currentTimeLimit = Storage.get('time_limit', '60');
 
   // ==================== 浏览记录管理 ====================
 
@@ -456,6 +505,11 @@
       this.isRunning = false;
       this.viewedPosts = new Set();
       this.lastLikeTime = 0;
+      this.browseStartTime = 0;
+      this.hasStartedScrolling = false;
+      this.effectiveBrowseMode = currentBrowseMode;
+      this.targetPostLimit = POST_LIMIT_OPTIONS[currentPostLimit]?.value || 40;
+      this.targetTimeLimit = (TIME_LIMIT_OPTIONS[currentTimeLimit]?.value || 60) * 1000;
     }
 
     async start() {
@@ -482,6 +536,9 @@
       await this.scrollController.scrollToTop();
       this.scrollController.reset();
 
+      // 注意：必须回到第一楼和顶部之后才开始计时，否则时间模式会过早退出
+      this.initBrowsePlan();
+
       // 开始滚动浏览
       await this.browseAllReplies();
 
@@ -494,6 +551,50 @@
     stop() {
       this.isRunning = false;
       log('停止浏览');
+    }
+
+    initBrowsePlan() {
+      this.browseStartTime = Date.now();
+      this.hasStartedScrolling = false;
+      this.effectiveBrowseMode = currentBrowseMode;
+      this.targetPostLimit = POST_LIMIT_OPTIONS[currentPostLimit]?.value || 40;
+      this.targetTimeLimit = (TIME_LIMIT_OPTIONS[currentTimeLimit]?.value || 60) * 1000;
+
+      if (currentBrowseMode === 'smart') {
+        const r = Math.random();
+
+        if (r < 0.65) {
+          this.effectiveBrowseMode = 'posts';
+          this.targetPostLimit = randomInt(20, 50);
+        } else if (r < 0.9) {
+          this.effectiveBrowseMode = 'time';
+          this.targetTimeLimit = randomInt(45, 100) * 1000;
+        } else {
+          this.effectiveBrowseMode = 'all';
+        }
+      }
+
+      log(
+        `本帖浏览计划: ${BROWSE_MODE_OPTIONS[this.effectiveBrowseMode]?.name || this.effectiveBrowseMode}, ` +
+        `楼层目标: ${this.targetPostLimit}, 时间目标: ${Math.round(this.targetTimeLimit / 1000)}秒`
+      );
+    }
+
+    shouldFinishBrowsing() {
+      if (this.effectiveBrowseMode === 'all') return false;
+
+      // 保护：至少真正开始滚动后才允许退出
+      if (!this.hasStartedScrolling) return false;
+
+      if (this.effectiveBrowseMode === 'posts') {
+        return this.viewedPosts.size >= this.targetPostLimit;
+      }
+
+      if (this.effectiveBrowseMode === 'time') {
+        return Date.now() - this.browseStartTime >= this.targetTimeLimit;
+      }
+
+      return false;
     }
 
     // 跳转到帖子第一楼
@@ -533,6 +634,11 @@
           // 更新心跳（即使没有新帖子）
           this.onStatsUpdate?.();
 
+          if (this.shouldFinishBrowsing()) {
+            log('已达到当前帖子浏览目标，准备返回列表');
+            break;
+          }
+
           // 检查是否到达底部
           if (this.scrollController.isAtBottom()) {
             log('到达页面底部，等待加载新内容...');
@@ -553,6 +659,7 @@
 
           // 继续滚动
           await this.scrollController.scrollDown();
+          this.hasStartedScrolling = true;
           await randomDelay(CONFIG.scrollInterval, CONFIG.scrollInterval * 1.3);
         } catch (error) {
           log('浏览回复出错:', error.message);
@@ -1238,6 +1345,31 @@
             </div>
           </div>
           <div class="speed-selector">
+            <span class="speed-label">浏览:</span>
+            <div class="speed-buttons">
+              <button class="speed-btn browse-mode-btn ${currentBrowseMode === 'all' ? 'active' : ''}" data-mode="all">全部</button>
+              <button class="speed-btn browse-mode-btn ${currentBrowseMode === 'posts' ? 'active' : ''}" data-mode="posts">楼层</button>
+              <button class="speed-btn browse-mode-btn ${currentBrowseMode === 'time' ? 'active' : ''}" data-mode="time">时间</button>
+              <button class="speed-btn browse-mode-btn ${currentBrowseMode === 'smart' ? 'active' : ''}" data-mode="smart">智能</button>
+            </div>
+          </div>
+          <div class="speed-selector">
+            <span class="speed-label">楼层:</span>
+            <div class="speed-buttons">
+              <button class="speed-btn post-limit-btn ${currentPostLimit === '20' ? 'active' : ''}" data-post-limit="20">20</button>
+              <button class="speed-btn post-limit-btn ${currentPostLimit === '40' ? 'active' : ''}" data-post-limit="40">40</button>
+              <button class="speed-btn post-limit-btn ${currentPostLimit === '80' ? 'active' : ''}" data-post-limit="80">80</button>
+            </div>
+          </div>
+          <div class="speed-selector">
+            <span class="speed-label">时间:</span>
+            <div class="speed-buttons">
+              <button class="speed-btn time-limit-btn ${currentTimeLimit === '30' ? 'active' : ''}" data-time-limit="30">30秒</button>
+              <button class="speed-btn time-limit-btn ${currentTimeLimit === '60' ? 'active' : ''}" data-time-limit="60">60秒</button>
+              <button class="speed-btn time-limit-btn ${currentTimeLimit === '120' ? 'active' : ''}" data-time-limit="120">120秒</button>
+            </div>
+          </div>
+          <div class="speed-selector">
             <span class="speed-label">点赞:</span>
             <div class="speed-buttons">
               <button class="speed-btn like-btn ${enableLike ? 'active' : ''}" data-like="true">开启</button>
@@ -1303,6 +1435,36 @@
           setList(list);
           // 更新按钮状态
           document.querySelectorAll('.list-btn[data-list]').forEach(b => b.classList.remove('active'));
+          e.target.classList.add('active');
+        });
+      });
+
+      // 浏览模式按钮事件
+      document.querySelectorAll('.browse-mode-btn[data-mode]').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const mode = e.target.dataset.mode;
+          setBrowseMode(mode);
+          document.querySelectorAll('.browse-mode-btn[data-mode]').forEach(b => b.classList.remove('active'));
+          e.target.classList.add('active');
+        });
+      });
+
+      // 楼层数量按钮事件
+      document.querySelectorAll('.post-limit-btn[data-post-limit]').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const limit = e.target.dataset.postLimit;
+          setPostLimit(limit);
+          document.querySelectorAll('.post-limit-btn[data-post-limit]').forEach(b => b.classList.remove('active'));
+          e.target.classList.add('active');
+        });
+      });
+
+      // 时间限制按钮事件
+      document.querySelectorAll('.time-limit-btn[data-time-limit]').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const limit = e.target.dataset.timeLimit;
+          setTimeLimit(limit);
+          document.querySelectorAll('.time-limit-btn[data-time-limit]').forEach(b => b.classList.remove('active'));
           e.target.classList.add('active');
         });
       });
