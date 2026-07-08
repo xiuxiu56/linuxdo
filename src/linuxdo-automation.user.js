@@ -1521,6 +1521,12 @@
         }
 
 
+        #linuxdo-auto-panel .action-section {
+          margin-top: 12px;
+          padding-top: 12px;
+          border-top: 1px solid rgba(255,255,255,0.10);
+        }
+
         #linuxdo-auto-panel button.action-btn {
           width: 100%;
           padding: 9px 10px;
@@ -1667,9 +1673,10 @@
               <button class="speed-btn chance-btn ${currentLikeChance === 'veryHigh' ? 'active' : ''}" data-chance="veryHigh">极高</button>
             </div>
           </div>
-          <button class="action-btn btn-start" id="btn-auto-start">开始自动浏览</button>
-          <button class="action-btn btn-stop" id="btn-auto-stop" style="display:none;">停止运行</button>
-          <button class="action-btn btn-clear" id="btn-clear-history">清除浏览记录</button>
+          <div class="action-section">
+            <button class="action-btn btn-start" id="btn-auto-start">开始自动浏览</button>
+            <button class="action-btn btn-stop" id="bn-clear" id="btn-clear-history">清除浏览记录</button>
+          </div>
         </div>
       `;
 
