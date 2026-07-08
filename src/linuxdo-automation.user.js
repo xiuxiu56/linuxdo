@@ -257,9 +257,30 @@
     }
   }
 
+  const activeDelayResolvers = new Set();
+
   function randomDelay(min, max) {
     const delay = Math.floor(Math.random() * (max - min + 1)) + min;
-    return new Promise(resolve => setTimeout(resolve, delay));
+
+    return new Promise(resolve => {
+      let timer = null;
+
+      const done = () => {
+        if (timer) clearTimeout(timer);
+        activeDelayResolvers.delete(done);
+        resolve();
+      };
+
+      activeDelayResolvers.add(done);
+      timer = setTimeout(done, delay);
+    });
+  }
+
+  function cancelAllDelays() {
+    for (const done of [...activeDelayResolvers]) {
+      done();
+    }
+    activeDelayResolvers.clear();
   }
 
   function randomInt(min, max) {
@@ -836,6 +857,11 @@
       log('准备返回话题列表...');
       await randomDelay(CONFIG.returnToListDelay, CONFIG.returnToListDelay * 1.5);
 
+      if (!this.isRunning) {
+        log('已停止，不返回列表');
+        return;
+      }
+
       // 根据进入帖子前的列表路径返回，支持 /latest /new /unseen 和 /tag/.../l/new 等
       const returnUrl = getListPathFor(currentList);
 
@@ -985,6 +1011,12 @@
       const targetList = getListPathFor(currentList, window.location.pathname);
       log(`当前列表已浏览完，刷新列表: ${targetList}`);
       await randomDelay(1000, 2000);
+
+      if (!this.isRunning) {
+        log('已停止，不刷新列表');
+        return;
+      }
+
       window.location.href = targetList;
     }
   }
@@ -1238,10 +1270,12 @@
           color: #fff;
           min-width: 240px;
           transition: all 0.3s ease;
+          will-change: left, top;
+          touch-action: none;
         }
         #linuxdo-auto-panel.minimized {
-          min-width: auto;
-          padding: 10px;
+          min-width: 150px;
+          padding: 10px 12px;
         }
         #linuxdo-auto-panel.minimized .panel-content {
           display: none;
@@ -1253,6 +1287,19 @@
           display: flex;
           align-items: center;
           justify-content: space-between;
+          gap: 16px;
+          cursor: move;
+          user-select: none;
+          white-space: nowrap;
+        }
+        #linuxdo-auto-panel.dragging {
+          transition: none !important;
+          cursor: grabbing;
+          opacity: 0.95;
+        }
+
+        #linuxdo-auto-panel.dragging * {
+          user-select: none;
         }
         #linuxdo-auto-panel .btn-minimize {
           background: rgba(255,255,255,0.2);
@@ -1439,6 +1486,9 @@
       document.body.appendChild(panel);
       this.panel = panel;
 
+      this.restorePanelState();
+      this.initPanelDrag();
+
       // 绑定事件
       document.getElementById('btn-auto-start').addEventListener('click', () => this.start());
       document.getElementById('btn-auto-stop').addEventListener('click', () => this.stop());
@@ -1523,8 +1573,91 @@
 
     toggleMinimize() {
       this.panel.classList.toggle('minimized');
-      document.getElementById('btn-minimize').textContent =
-        this.panel.classList.contains('minimized') ? '+' : '-';
+      const minimized = this.panel.classList.contains('minimized');
+      document.getElementById('btn-minimize').textContent = minimized ? '+' : '-';
+      Storage.set('panel_minimized', minimized);
+    }
+
+    restorePanelState() {
+      const pos = Storage.get('panel_position', null);
+
+      if (pos && typeof pos.left === 'number' && typeof pos.top === 'number') {
+        this.panel.style.left = `${pos.left}px`;
+        this.panel.style.top = `${pos.top}px`;
+        this.panel.style.right = 'auto';
+      }
+
+      const minimized = Storage.get('panel_minimized', false);
+      if (minimized) {
+        this.panel.classList.add('minimized');
+        const btn = document.getElementById('btn-minimize');
+        if (btn) btn.textContent = '+';
+      }
+    }
+
+    initPanelDrag() {
+      const header = this.panel.querySelector('h3');
+      if (!header) return;
+    
+      let dragging = false;
+      let offsetX = 0;
+      let offsetY = 0;
+    
+      const movePanel = (clientX, clientY) => {
+        const maxLeft = window.innerWidth - this.panel.offsetWidth;
+        const maxTop = window.innerHeight - this.panel.offsetHeight;
+    
+        const left = Math.max(0, Math.min(maxLeft, clientX - offsetX));
+        const top = Math.max(0, Math.min(maxTop, clientY - offsetY));
+    
+        this.panel.style.left = `${left}px`;
+        this.panel.style.top = `${top}px`;
+        this.panel.style.right = 'auto';
+      };
+    
+      header.addEventListener('pointerdown', (e) => {
+        if (e.target.closest('button')) return;
+    
+        dragging = true;
+    
+        const rect = this.panel.getBoundingClientRect();
+        offsetX = e.clientX - rect.left;
+        offsetY = e.clientY - rect.top;
+    
+        this.panel.style.left = `${rect.left}px`;
+        this.panel.style.top = `${rect.top}px`;
+        this.panel.style.right = 'auto';
+    
+        this.panel.classList.add('dragging');
+        header.setPointerCapture(e.pointerId);
+    
+        e.preventDefault();
+      });
+    
+      header.addEventListener('pointermove', (e) => {
+        if (!dragging) return;
+        movePanel(e.clientX, e.clientY);
+      });
+    
+      header.addEventListener('pointerup', (e) => {
+        if (!dragging) return;
+    
+        dragging = false;
+        this.panel.classList.remove('dragging');
+    
+        const rect = this.panel.getBoundingClientRect();
+        Storage.set('panel_position', {
+          left: Math.round(rect.left),
+          top: Math.round(rect.top)
+        });
+    
+        header.releasePointerCapture(e.pointerId);
+      });
+    
+      header.addEventListener('pointercancel', () => {
+        dragging = false;
+        this.panel.classList.remove('dragging');
+      });
     }
 
     updateStats() {
@@ -1599,6 +1732,9 @@
     stop() {
       this.isEnabled = false;
       Storage.set('auto_running', false);
+
+      // 立即打断所有等待中的随机延迟
+      cancelAllDelays();
 
       // 停止卡住检测
       this.stopStuckDetection();
