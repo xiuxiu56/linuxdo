@@ -1462,25 +1462,25 @@
         }
 
         #linuxdo-auto-panel .range-selector .speed-label {
-          height: 32px !important;
-          line-height: 32px !important;
+          height: 28px !important;
+          line-height: 28px !important;
           display: block !important;
           padding: 0 !important;
         }
 
         #linuxdo-auto-panel .range-selector .range-inputs {
-          height: 32px !important;
+          height: 28px !important;
           display: grid !important;
-          grid-template-columns: 70px 20px 70px;
+          grid-template-columns: 58px 18px 58px;
           align-items: center !important;
           column-gap: 8px !important;
           width: auto !important;
         }
 
         #linuxdo-auto-panel .range-selector .range-inputs input {
-          width: 70px !important;
-          height: 32px !important;
-          line-height: 32px !important;
+          width: 58px !important;
+          height: 28px !important;
+          line-height: 28px !important;
           box-sizing: border-box !important;
           padding: 0 !important;
           margin: 0 !important;
@@ -1495,8 +1495,8 @@
         }
 
         #linuxdo-auto-panel .range-selector .range-inputs span {
-          height: 32px !important;
-          line-height: 32px !important;
+          height: 28px !important;
+          line-height: 28px !important;
           display: block !important;
           text-align: center !important;
           color: rgba(255,255,255,0.72) !important;
@@ -1508,6 +1508,18 @@
           border-color: rgba(34,197,94,0.9) !important;
           background: rgba(34,197,94,0.18) !important;
         }
+
+        #linuxdo-auto-panel .range-selector .range-inputs input::-webkit-outer-spin-button,
+        #linuxdo-auto-panel .range-selector .range-inputs input::-webkit-inner-spin-button {
+          -webkit-appearance: none;
+          margin: 0;
+        }
+
+        #linuxdo-auto-paput[type=number] {
+          -moz-appearance: textfield;
+          appearance: textfield;
+        }
+
 
         #linuxdo-auto-panel button.action-btn {
           width: 100%;
