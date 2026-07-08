@@ -296,8 +296,6 @@
       this.liked = new Set(Storage.get('liked_posts', []));
       this.sessionViewed = 0;
       this.sessionLiked = 0;
-      this.sessionReplies = 0;  // 本次浏览的回复数
-      this.totalReplies = Storage.get('total_replies', 0);  // 总计浏览回复数
     }
 
     isTopicViewed(topicId) {
@@ -327,26 +325,14 @@
       }
     }
 
-    // 记录浏览回复
-    addReplyViewed() {
-      this.sessionReplies++;
-      this.totalReplies++;
-      // 每10个回复保存一次，避免频繁写入
-      if (this.sessionReplies % 10 === 0) {
-        Storage.set('total_replies', this.totalReplies);
-      }
-    }
-
     save() {
       Storage.set('viewed_topics', [...this.viewed]);
       Storage.set('liked_posts', [...this.liked]);
-      Storage.set('total_replies', this.totalReplies);
     }
 
     clearHistory() {
       this.viewed.clear();
       this.liked.clear();
-      this.totalReplies = 0;
       this.save();
       log('已清除所有浏览历史');
     }
@@ -356,9 +342,7 @@
         totalViewed: this.viewed.size,
         totalLiked: this.liked.size,
         sessionViewed: this.sessionViewed,
-        sessionLiked: this.sessionLiked,
-        sessionReplies: this.sessionReplies,
-        totalReplies: this.totalReplies
+        sessionLiked: this.sessionLiked
       };
     }
 
@@ -595,8 +579,6 @@
             this.viewedPosts.add(postId);
             newPostFound = true;
 
-            // 记录浏览回复数
-            this.history.addReplyViewed();
             this.onStatsUpdate?.();
 
             // 只有发现新帖子时才等待阅读时间
@@ -995,12 +977,6 @@
         log(`检测到URL变化: ${oldPageType} -> ${newPageType}`);
         this.lastUrl = currentUrl;
 
-        // 更新页面类型显示
-        const pageTypeEl = document.getElementById('page-type');
-        if (pageTypeEl) {
-          pageTypeEl.textContent = newPageType;
-        }
-
         // 如果正在运行且页面类型发生变化，重新初始化浏览器
         if (this.isEnabled && oldPageType !== newPageType) {
           log('页面类型变化，重新初始化浏览器...');
@@ -1373,7 +1349,6 @@
         });
       });
 
-      document.getElementById('page-type').textContent = getPageType();
     }
 
     toggleMinimize() {
@@ -1384,11 +1359,7 @@
 
     updateStats() {
       const stats = this.history.getStats();
-      document.getElementById('session-viewed').textContent = stats.sessionViewed;
-      document.getElementById('session-replies').textContent = stats.sessionReplies;
-      document.getElementById('session-liked').textContent = stats.sessionLiked;
       document.getElementById('total-viewed').textContent = stats.totalViewed;
-      document.getElementById('total-replies').textContent = stats.totalReplies;
       document.getElementById('total-liked').textContent = stats.totalLiked;
     }
 
