@@ -1265,31 +1265,11 @@
               </span>
             </div>
             <div class="stats-row">
-              <span class="stats-label">页面类型</span>
-              <span class="stats-value" id="page-type">-</span>
-            </div>
-            <div class="stats-row">
-              <span class="stats-label">本次帖子</span>
-              <span class="stats-value" id="session-viewed">0</span>
-            </div>
-            <div class="stats-row">
-              <span class="stats-label">本次回复</span>
-              <span class="stats-value" id="session-replies">0</span>
-            </div>
-            <div class="stats-row">
-              <span class="stats-label">本次点赞</span>
-              <span class="stats-value" id="session-liked">0</span>
-            </div>
-            <div class="stats-row">
-              <span class="stats-label">总计帖子</span>
+              <span class="stats-label">总浏览帖子</span>
               <span class="stats-value" id="total-viewed">0</span>
             </div>
             <div class="stats-row">
-              <span class="stats-label">总计回复</span>
-              <span class="stats-value" id="total-replies">0</span>
-            </div>
-            <div class="stats-row">
-              <span class="stats-label">总计点赞</span>
+              <span class="stats-label">总点赞</span>
               <span class="stats-value" id="total-liked">0</span>
             </div>
           </div>
