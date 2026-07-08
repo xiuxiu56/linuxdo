@@ -1496,6 +1496,64 @@
           flex: 0 0 10px;
         }
 
+
+        #linuxdo-auto-panel .range-selector {
+          grid-template-columns: 46px auto !important;
+          justify-content: start;
+        }
+
+        #linuxdo-auto-panel .range-selector .range-inputs {
+          display: inline-grid !important;
+          grid-template-columns: 52px 12px 52px;
+          align-items: center;
+          justify-content: start;
+          gap: 6px;
+          width: auto !important;
+        }
+
+        #linuxdo-auto-panel .range-selector .range-inputs input {
+          width: 52px !important;
+          height: 28px;
+          flex: none !important;
+        }
+
+        #linuxdo-auto-panel .range-selector .range-inputs span {
+          width: 12px !important;
+          text-align: center;
+          flex: none !important;
+        }
+
+
+        #linuxdo-auto-panel .range-selector {
+          grid-template-columns: 46px 1fr !important;
+        }
+
+        #linuxdo-auto-panel .range-selector .range-inputs {
+          display: grid !important;
+          grid-template-columns: 1fr 14px 1fr;
+          align-items: center;
+          gap: 8px;
+          width: 100% !important;
+        }
+
+        #linuxdo-auto-panel .range-selector .range-inputs input {
+          width: 100% !important;
+          height: 32px !important;
+          border-radius: 10px;
+          font-size: 14px !important;
+          font-weight: 700;
+          text-align: center;
+          flex: none !important;
+        }
+
+        #linuxdo-auto-panel .range-selector .range-inputs span {
+          width: 14px !important;
+          font-size: 16px !important;
+          font-weight: 700;
+          text-align: center;
+          flex: none !important;
+        }
+
         #linuxdo-auto-panel button.action-btn {
           width: 100%;
           padding: 9px 10px;
@@ -1606,7 +1664,7 @@
               <button class="speed-btn browse-mode-btn ${currentBrowseMode === 'smart' ? 'active' : ''}" data-mode="smart">智能</button>
             </div>
           </div>
-            <div class="speed-selector">
+            <div class="speed-selector range-selector">
               <span class="speed-label">楼层</span>
               <div class="range-inputs">
                 <input id="post-min-input" type="number" min="1" value="${currentPostMin}">
@@ -1614,7 +1672,7 @@
                 <input id="post-max-input" type="number" min="1" value="${currentPostMax}">
               </div>
             </div>
-            <div class="speed-selector">
+            <div class="speed-selector range-selector">
               <span class="speed-label">时间</span>
               <div class="range-inputs">
                 <input id="time-min-input" type="number" min="1" value="${currentTimeMin}">
