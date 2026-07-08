@@ -103,19 +103,26 @@
   };
   let currentBrowseMode = 'smart';
 
-  const POST_LIMIT_OPTIONS = {
-    20: { name: '20楼', value: 20 },
-    40: { name: '40楼', value: 40 },
-    80: { name: '80楼', value: 80 }
-  };
-  let currentPostLimit = '40';
+  let currentPostMin = 2;
+  let currentPostMax = 20;
 
-  const TIME_LIMIT_OPTIONS = {
-    30: { name: '30秒', value: 30 },
-    60: { name: '60秒', value: 60 },
-    120: { name: '120秒', value: 120 }
-  };
-  let currentTimeLimit = '60';
+  let currentTimeMin = 5;
+  let currentTimeMax = 20;
+
+  function normalizeRange(min, max, fallbackMin, fallbackMax) {
+    let a = parseInt(min, 10);
+    let b = parseInt(max, 10);
+
+    if (!Number.isFinite(a)) a = fallbackMin;
+    if (!Number.isFinite(b)) b = fallbackMax;
+
+    a = Math.max(1, a);
+    b = Math.max(1, b);
+
+    if (a > b) [a, b] = [b, a];
+
+    return [a, b];
+  }
 
   const CONFIG = {
     // 动态从速度预设获取
@@ -233,20 +240,28 @@
     }
   }
 
-  function setPostLimit(limit) {
-    if (POST_LIMIT_OPTIONS[limit]) {
-      currentPostLimit = limit;
-      Storage.set('post_limit', limit);
-      log(`楼层浏览数量设置为: ${POST_LIMIT_OPTIONS[limit].name}`);
-    }
+  function setPostRange(min, max) {
+    const [a, b] = normalizeRange(min, max, 2, 20);
+
+    currentPostMin = a;
+    currentPostMax = b;
+
+    Storage.set('post_min', a);
+    Storage.set('post_max', b);
+
+    log(`楼层随机范围设置为: ${a}-${b}`);
   }
 
-  function setTimeLimit(limit) {
-    if (TIME_LIMIT_OPTIONS[limit]) {
-      currentTimeLimit = limit;
-      Storage.set('time_limit', limit);
-      log(`时间浏览秒数设置为: ${TIME_LIMIT_OPTIONS[limit].name}`);
-    }
+  function setTimeRange(min, max) {
+    const [a, b] = normalizeRange(min, max, 5, 20);
+
+    currentTimeMin = a;
+    currentTimeMax = b;
+
+    Storage.set('time_min', a);
+    Storage.set('time_max', b);
+
+    log(`时间随机范围设置为: ${a}-${b}秒`);
   }
 
   // ==================== 工具函数 ====================
@@ -380,8 +395,10 @@
   enableLike = Storage.get('enable_like', true);
   currentLikeChance = Storage.get('like_chance', 'medium');
   currentBrowseMode = Storage.get('browse_mode', 'smart');
-  currentPostLimit = Storage.get('post_limit', '40');
-  currentTimeLimit = Storage.get('time_limit', '60');
+  currentPostMin = Storage.get('post_min', 2);
+  currentPostMax = Storage.get('post_max', 20);
+  currentTimeMin = Storage.get('time_min', 5);
+  currentTimeMax = Storage.get('time_max', 20);
 
   // ==================== 浏览记录管理 ====================
 
@@ -554,8 +571,8 @@
       this.browseStartTime = 0;
       this.hasStartedScrolling = false;
       this.effectiveBrowseMode = currentBrowseMode;
-      this.targetPostLimit = POST_LIMIT_OPTIONS[currentPostLimit]?.value || 40;
-      this.targetTimeLimit = (TIME_LIMIT_OPTIONS[currentTimeLimit]?.value || 60) * 1000;
+      this.targetPostLimit = randomInt(currentPostMin, currentPostMax);
+      this.targetTimeLimit = randomInt(currentTimeMin, currentTimeMax) * 1000;
     }
 
     async start() {
@@ -603,8 +620,8 @@
       this.browseStartTime = Date.now();
       this.hasStartedScrolling = false;
       this.effectiveBrowseMode = currentBrowseMode;
-      this.targetPostLimit = POST_LIMIT_OPTIONS[currentPostLimit]?.value || 40;
-      this.targetTimeLimit = (TIME_LIMIT_OPTIONS[currentTimeLimit]?.value || 60) * 1000;
+      this.targetPostLimit = randomInt(currentPostMin, currentPostMax);
+      this.targetTimeLimit = randomInt(currentTimeMin, currentTimeMax) * 1000;
 
       if (currentBrowseMode === 'smart') {
         const r = Math.random();
@@ -1264,12 +1281,12 @@
           top: 80px;
           right: 20px;
           z-index: 99999;
-          width: 292px;
+          width: 270px;
           background: rgba(22, 24, 32, 0.94);
           backdrop-filter: blur(14px);
           border: 1px solid rgba(255,255,255,0.12);
           border-radius: 18px;
-          padding: 14px;
+          padding: 12px;
           box-shadow: 0 14px 42px rgba(0,0,0,0.34);
           font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
           font-size: 13px;
@@ -1292,7 +1309,7 @@
 
         #linuxdo-auto-panel.minimized {
           width: 188px;
-          padding: 10px 12px;
+          padding: 9px 10px;
           border-radius: 999px;
         }
 
@@ -1365,9 +1382,9 @@
         }
 
         #linuxdo-auto-panel .section-title {
-          font-size: 12px;
+          font-size: 11px;
           color: rgba(255,255,255,0.58);
-          margin-bottom: 8px;
+          margin-bottom: 7px;
         }
 
         #linuxdo-auto-panel .summary {
@@ -1384,25 +1401,25 @@
         #linuxdo-auto-panel .summary-status {
           display: flex;
           align-items: center;
-          gap: 7px;
+          gap: 5px;
           font-weight: 600;
         }
 
         #linuxdo-auto-panel .summary-stat {
           color: rgba(255,255,255,0.78);
-          font-size: 12px;
+          font-size: 11px;
         }
 
         #linuxdo-auto-panel .speed-selector {
           display: grid;
-          grid-template-columns: 44px 1fr;
+          grid-template-columns: 46px 1fr;
           align-items: center;
           gap: 8px;
-          margin-bottom: 8px;
+          margin-bottom: 7px;
         }
 
         #linuxdo-auto-panel .speed-label {
-          font-size: 12px;
+          font-size: 11px;
           color: rgba(255,255,255,0.66);
         }
 
@@ -1413,12 +1430,12 @@
 
         #linuxdo-auto-panel .speed-btn {
           flex: 1;
-          padding: 6px 7px;
+          padding: 5px 6px;
           border: 1px solid rgba(255,255,255,0.1);
-          border-radius: 10px;
+          border-radius: 9px;
           background: rgba(255,255,255,0.07);
           color: rgba(255,255,255,0.86);
-          font-size: 12px;
+          font-size: 11px;
           cursor: pointer;
           transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
         }
@@ -1434,9 +1451,54 @@
           font-weight: 700;
         }
 
+        #linuxdo-auto-panel .range-inputs {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          width: 100%;
+        }
+
+        #linuxdo-auto-panel .range-inputs input {
+          width: 50px;
+          height: 28px;
+          box-sizing: border-box;
+          padding: 0 8px;
+          border-radius: 9px;
+          border: 1px solid rgba(255,255,255,0.12);
+          background: rgba(255,255,255,0.08);
+          color: #fff;
+          font-size: 12px;
+          font-weight: 600;
+          text-align: center;
+          outline: none;
+          flex: 0 0 50px;
+        }
+
+        #linuxdo-auto-panel .range-inputs input:focus {
+          border-color: rgba(34,197,94,0.75);
+          background: rgba(255,255,255,0.12);
+        }
+
+        #linuxdo-auto-panel .range-inputs input::-webkit-outer-spin-button,
+        #linuxdo-auto-panel .range-inputs input::-webkit-inner-spin-button {
+          -webkit-appearance: none;
+          margin: 0;
+        }
+
+        #linuxdo-auto-panel .range-inputs span {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          width: 10px;
+          color: rgba(255,255,255,0.55);
+          font-size: 13px;
+          font-weight: 600;
+          flex: 0 0 10px;
+        }
+
         #linuxdo-auto-panel button.action-btn {
           width: 100%;
-          padding: 10px 12px;
+          padding: 9px 10px;
           margin-top: 8px;
           border: none;
           border-radius: 12px;
@@ -1546,20 +1608,20 @@
           </div>
             <div class="speed-selector">
               <span class="speed-label">楼层</span>
-            <div class="speed-buttons">
-              <button class="speed-btn post-limit-btn ${currentPostLimit === '20' ? 'active' : ''}" data-post-limit="20">20</button>
-              <button class="speed-btn post-limit-btn ${currentPostLimit === '40' ? 'active' : ''}" data-post-limit="40">40</button>
-              <button class="speed-btn post-limit-btn ${currentPostLimit === '80' ? 'active' : ''}" data-post-limit="80">80</button>
+              <div class="range-inputs">
+                <input id="post-min-input" type="number" min="1" value="${currentPostMin}">
+                <span>-</span>
+                <input id="post-max-input" type="number" min="1" value="${currentPostMax}">
+              </div>
             </div>
-          </div>
             <div class="speed-selector">
               <span class="speed-label">时间</span>
-            <div class="speed-buttons">
-              <button class="speed-btn time-limit-btn ${currentTimeLimit === '30' ? 'active' : ''}" data-time-limit="30">30秒</button>
-              <button class="speed-btn time-limit-btn ${currentTimeLimit === '60' ? 'active' : ''}" data-time-limit="60">60秒</button>
-              <button class="speed-btn time-limit-btn ${currentTimeLimit === '120' ? 'active' : ''}" data-time-limit="120">120秒</button>
+              <div class="range-inputs">
+                <input id="time-min-input" type="number" min="1" value="${currentTimeMin}">
+                <span>-</span>
+                <input id="time-max-input" type="number" min="1" value="${currentTimeMax}">
+              </div>
             </div>
-          </div>
           </div>
 
           <div class="section">
@@ -1630,25 +1692,27 @@
         });
       });
 
-      // 楼层数量按钮事件
-      document.querySelectorAll('.post-limit-btn[data-post-limit]').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-          const limit = e.target.dataset.postLimit;
-          setPostLimit(limit);
-          document.querySelectorAll('.post-limit-btn[data-post-limit]').forEach(b => b.classList.remove('active'));
-          e.target.classList.add('active');
-        });
-      });
+      // 楼层随机范围输入事件
+      const postMinInput = document.getElementById('post-min-input');
+      const postMaxInput = document.getElementById('post-max-input');
 
-      // 时间限制按钮事件
-      document.querySelectorAll('.time-limit-btn[data-time-limit]').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-          const limit = e.target.dataset.timeLimit;
-          setTimeLimit(limit);
-          document.querySelectorAll('.time-limit-btn[data-time-limit]').forEach(b => b.classList.remove('active'));
-          e.target.classList.add('active');
-        });
-      });
+      const savePostRange = () => {
+        setPostRange(postMinInput?.value, postMaxInput?.value);
+      };
+
+      postMinInput?.addEventListener('change', savePostRange);
+      postMaxInput?.addEventListener('change', savePostRange);
+
+      // 时间随机范围输入事件
+      const timeMinInput = document.getElementById('time-min-input');
+      const timeMaxInput = document.getElementById('time-max-input');
+
+      const saveTimeRange = () => {
+        setTimeRange(timeMinInput?.value, timeMaxInput?.value);
+      };
+
+      timeMinInput?.addEventListener('change', saveTimeRange);
+      timeMaxInput?.addEventListener('change', saveTimeRange);
 
       // 点赞开关按钮事件
       document.querySelectorAll('.like-btn[data-like]').forEach(btn => {
