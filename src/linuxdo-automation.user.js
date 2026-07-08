@@ -1451,107 +1451,62 @@
           font-weight: 700;
         }
 
-        #linuxdo-auto-panel .range-inputs {
-          display: flex;
-          align-items: center;
-          gap: 6px;
-          width: 100%;
-        }
-
-        #linuxdo-auto-panel .range-inputs input {
-          width: 50px;
-          height: 28px;
-          box-sizing: border-box;
-          padding: 0 8px;
-          border-radius: 9px;
-          border: 1px solid rgba(255,255,255,0.12);
-          background: rgba(255,255,255,0.08);
-          color: #fff;
-          font-size: 12px;
-          font-weight: 600;
-          text-align: center;
-          outline: none;
-          flex: 0 0 50px;
-        }
-
-        #linuxdo-auto-panel .range-inputs input:focus {
-          border-color: rgba(34,197,94,0.75);
-          background: rgba(255,255,255,0.12);
-        }
-
-        #linuxdo-auto-panel .range-inputs input::-webkit-outer-spin-button,
-        #linuxdo-auto-panel .range-inputs input::-webkit-inner-spin-button {
-          -webkit-appearance: none;
-          margin: 0;
-        }
-
-        #linuxdo-auto-panel .range-inputs span {
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          width: 10px;
-          color: rgba(255,255,255,0.55);
-          font-size: 13px;
-          font-weight: 600;
-          flex: 0 0 10px;
-        }
 
 
         #linuxdo-auto-panel .range-selector {
-          grid-template-columns: 46px auto !important;
-          justify-content: start;
+          display: grid !important;
+          grid-template-columns: 46px 1fr !important;
+          align-items: center !important;
+          column-gap: 10px !important;
+          margin-bottom: 8px !important;
+        }
+
+        #linuxdo-auto-panel .range-selector .speed-label {
+          height: 32px !important;
+          line-height: 32px !important;
+          display: block !important;
+          padding: 0 !important;
         }
 
         #linuxdo-auto-panel .range-selector .range-inputs {
-          display: inline-grid !important;
-          grid-template-columns: 52px 12px 52px;
-          align-items: center;
-          justify-content: start;
-          gap: 6px;
+          height: 32px !important;
+          display: grid !important;
+          grid-template-columns: 70px 20px 70px;
+          align-items: center !important;
+          column-gap: 8px !important;
           width: auto !important;
         }
 
         #linuxdo-auto-panel .range-selector .range-inputs input {
-          width: 52px !important;
-          height: 28px;
-          flex: none !important;
-        }
-
-        #linuxdo-auto-panel .range-selector .range-inputs span {
-          width: 12px !important;
-          text-align: center;
-          flex: none !important;
-        }
-
-
-        #linuxdo-auto-panel .range-selector {
-          grid-template-columns: 46px 1fr !important;
-        }
-
-        #linuxdo-auto-panel .range-selector .range-inputs {
-          display: grid !important;
-          grid-template-columns: 1fr 14px 1fr;
-          align-items: center;
-          gap: 8px;
-          width: 100% !important;
-        }
-
-        #linuxdo-auto-panel .range-selector .range-inputs input {
-          width: 100% !important;
+          width: 70px !important;
           height: 32px !important;
-          border-radius: 10px;
-          font-size: 14px !important;
-          font-weight: 700;
-          text-align: center;
-          flex: none !important;
+          line-height: 32px !important;
+          box-sizing: border-box !important;
+          padding: 0 !important;
+          margin: 0 !important;
+          border-radius: 10px !important;
+          border: 1px solid rgba(255,255,255,0.15) !important;
+          background: rgba(255,255,255,0.09) !important;
+          color: #fff !important;
+          font-size: 13px !important;
+          font-weight: 700 !important;
+          text-align: center !important;
+          outline: none !important;
         }
 
         #linuxdo-auto-panel .range-selector .range-inputs span {
-          width: 14px !important;
-          font-size: 16px !important;
-          font-weight: 700;
-          text-align: center;
-          flex: none !important;
+          height: 32px !important;
+          line-height: 32px !important;
+          display: block !important;
+          text-align: center !important;
+          color: rgba(255,255,255,0.72) !important;
+          font-size: 13px !important;
+          font-weight: 700 !important;
+        }
+
+        #linuxdo-auto-panel .range-selector .range-inputs input:focus {
+          border-color: rgba(34,197,94,0.9) !important;
+          background: rgba(34,197,94,0.18) !important;
         }
 
         #linuxdo-auto-panel button.action-btn {
@@ -1668,7 +1623,7 @@
               <span class="speed-label">楼层</span>
               <div class="range-inputs">
                 <input id="post-min-input" type="number" min="1" value="${currentPostMin}">
-                <span>-</span>
+                <span>至</span>
                 <input id="post-max-input" type="number" min="1" value="${currentPostMax}">
               </div>
             </div>
@@ -1676,7 +1631,7 @@
               <span class="speed-label">时间</span>
               <div class="range-inputs">
                 <input id="time-min-input" type="number" min="1" value="${currentTimeMin}">
-                <span>-</span>
+                <span>至</span>
                 <input id="time-max-input" type="number" min="1" value="${currentTimeMax}">
               </div>
             </div>
