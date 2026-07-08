@@ -879,6 +879,7 @@
       this.scrollController = new ScrollController();
       this.isRunning = false;
       this.scannedTopics = new Set();
+      this.allViewedStopNotified = false;
     }
 
     async start() {
@@ -898,18 +899,9 @@
           this.onStatsUpdate?.();
 
           if (this.scrollController.isAtBottom()) {
-            log('到达列表底部，等待加载...');
-            await randomDelay(CONFIG.loadWaitTime, CONFIG.loadWaitTime * 1.2);
-
-            if (!this.scrollController.hasNewContent()) {
-              log(`无新话题加载 (${this.scrollController.noNewContentCount}/${CONFIG.noNewContentRetry})`);
-
-              if (this.scrollController.isContentFullyLoaded()) {
-                log('列表已全部加载，尝试切换到其他列表');
-                await this.switchToAnotherList();
-                return;
-              }
-            }
+            log('已到达列表底部，未找到未浏览话题');
+            await this.switchToAnotherList();
+            return;
           }
 
           // 滚动加载更多
@@ -1007,18 +999,23 @@
     }
 
     async switchToAnotherList() {
-      // 根据当前列表路径刷新，支持 tag/category 内切换
-      const targetList = getListPathFor(currentList, window.location.pathname);
-      log(`当前列表已浏览完，刷新列表: ${targetList}`);
-      await randomDelay(1000, 2000);
+      if (this.allViewedStopNotified) return;
 
-      if (!this.isRunning) {
-        log('已停止，不刷新列表');
-        return;
-      }
+      this.allViewedStopNotified = true;
+      this.stop();
 
-      window.location.href = targetList;
+      log('已到达列表底部，未找到未浏览话题，停止自动浏览');
+
+      Storage.set('auto_running', false);
+      cancelAllDelays();
+
+      window.dispatchEvent(new CustomEvent('linuxdo-auto-stop-request', {
+        detail: {
+          message: '已到达列表底部，未找到未浏览话题，已停止自动浏览。'
+        }
+      }));
     }
+
   }
 
   // ==================== 主控制器 ====================
@@ -1037,6 +1034,11 @@
       // URL变化监听（处理SPA导航）
       this.lastUrl = window.location.href;
       this.urlCheckInterval = null;
+
+      window.addEventListener('linuxdo-auto-stop-request', (e) => {
+        this.stop();
+        this.showToast(e.detail?.message || '自动浏览已停止');
+      });
     }
 
     // 更新活动时间（心跳）
@@ -1468,6 +1470,28 @@
           display: none;
         }
 
+        .linuxdo-auto-toast {
+          position: fixed;
+          top: 24px;
+          left: 50%;
+          transform: translateX(-50%);
+          z-index: 100000;
+          background: rgba(22, 24, 32, 0.96);
+          color: #fff;
+          border: 1px solid rgba(255,255,255,0.12);
+          border-radius: 14px;
+          padding: 12px 16px;
+          box-shadow: 0 12px 36px rgba(0,0,0,0.36);
+          font-size: 13px;
+          font-weight: 600;
+          animation: linuxdoToastIn 0.18s ease-out;
+        }
+
+        @keyframes linuxdoToastIn {
+          from { opacity: 0; transform: translate(-50%, -8px); }
+          to { opacity: 1; transform: translate(-50%, 0); }
+        }
+
         .auto-viewed { opacity: 0.6; }
       `;
       document.head.appendChild(style);
@@ -1751,6 +1775,20 @@
       if (this.panel) {
         this.panel.classList.toggle('running', running);
       }
+    }
+
+    showToast(message) {
+      document.querySelectorAll('.linuxdo-auto-toast').forEach(el => el.remove());
+
+      const toast = document.createElement('div');
+      toast.className = 'linuxdo-auto-toast';
+      toast.textContent = message;
+
+      document.body.appendChild(toast);
+
+      setTimeout(() => {
+        toast.remove();
+      }, 3500);
     }
 
     updateStats() {
