@@ -1747,6 +1747,51 @@
           font-variant-numeric: tabular-nums;
         }
 
+
+        #linuxdo-auto-panel .main-action-section {
+          margin-top: 14px;
+          padding-top: 14px;
+          border-top: 1px solid rgba(255,255,255,0.10);
+        }
+
+        #linuxdo-auto-panel .main-action-section .action-btn {
+          height: 42px;
+          font-size: 14px;
+          font-weight: 700;
+          letter-spacing: 0.2px;
+        }
+
+        #linuxdo-auto-panel .main-action-section .btn-start {
+          background: linear-gradient(135deg, #22c55e, #16a34a);
+          box-shadow: 0 6px 18px rgba(34,197,94,0.25);
+        }
+
+        #linuxdo-auto-panel .main-action-section .btn-stop {
+          background: linear-gradient(135deg, #ef4444, #dc2626);
+          box-shadow: 0 6px 18px rgba(239,68,68,0.25);
+        }
+
+        #linuxdo-auto-panel .tool-action-section {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 8px;
+          margin-top: 10px;
+          padding-top: 10px;
+          border-top: 1px solid rgba(255,255,255,0.10);
+        }
+
+        #linuxdo-auto-panel .tool-action-section .action-btn {
+          height: 34px;
+          padding: 0;
+          font-size: 12px;
+          font-weight: 600;
+          background: rgba(255,255,255,0.10);
+        }
+
+        #linuxdo-auto-panel .tool-action-section .action-btn:hover {
+          background: rgba(255,255,255,0.16);
+        }
+
         #linuxdo-auto-panel button.action-btn {
           width: 100%;
           padding: 9px 10px;
@@ -1893,11 +1938,22 @@
               <button class="speed-btn chance-btn ${currentLikeChance === 'veryHigh' ? 'active' : ''}" data-chance="veryHigh">极高</button>
             </div>
           </div>
-          <div class="action-section">
-            <button class="action-btn btn-start" id="btn-auto-start">开始自动浏览</button>
-            <button class="action-btn btn-stop" id="btn-auto-stop" style="display:none;">停止运行</button>
-            <button class="action-btn btn-clear" id="btn-clear-history">清除浏览记录</button>
-            <button class="action-btn btn-log-toggle" id="auto-log-toggle">运行日志</button>
+          <div class="main-action-section">
+            <button class="action-btn btn-start" id="btn-auto-start">
+              ▶ 开始自动浏览
+            </button>
+            <button class="action-btn btn-stop" id="btn-auto-stop" style="display:none;">
+              ■ 停止运行
+            </button>
+          </div>
+
+          <div class="tool-action-section">
+            <button class="action-btn btn-clear" id="btn-clear-history">
+              🗑 清除记录
+            </button>
+            <button class="action-btn btn-log-toggle" id="auto-log-toggle">
+              📋 运行日志
+            </button>
           </div>
 
         </div>
