@@ -422,6 +422,41 @@
     return base;
   }
 
+
+  // 尝试无刷新返回列表（Discourse SPA）
+  function navigateWithoutReload(url) {
+    try {
+      // 优先点击页面真实导航链接
+      const links = [...document.querySelectorAll('a[href]')];
+
+      const target = links.find(link => {
+        try {
+          const linkUrl = new URL(link.href, window.location.origin);
+          return linkUrl.pathname === url;
+        } catch {
+          return false;
+        }
+      });
+
+      if (target) {
+        log(`点击页面导航: ${url}`);
+        target.click();
+        return true;
+      }
+
+      log(`未找到页面导航链接，尝试SPA: ${url}`);
+
+      history.pushState({}, '', url);
+      window.dispatchEvent(new PopStateEvent('popstate'));
+
+      return true;
+
+    } catch (e) {
+      log(`无刷新导航失败: ${e.message}`);
+      return false;
+    }
+  }
+
   // ==================== 存储管理 ====================
 
   class Storage {
@@ -705,10 +740,17 @@
         }
       }
 
-      log(
-        `本帖浏览计划: ${BROWSE_MODE_OPTIONS[this.effectiveBrowseMode]?.name || this.effectiveBrowseMode}, ` +
-        `楼层目标: ${this.targetPostLimit}, 时间目标: ${Math.round(this.targetTimeLimit / 1000)}秒`
-      );
+      const modeName = BROWSE_MODE_OPTIONS[this.effectiveBrowseMode]?.name || this.effectiveBrowseMode;
+
+      if (this.effectiveBrowseMode === 'posts') {
+        log(`本帖浏览计划: ${modeName}，目标: ${this.targetPostLimit}楼`);
+      } else if (this.effectiveBrowseMode === 'time') {
+        log(`本帖浏览计划: ${modeName}，目标: ${Math.round(this.targetTimeLimit / 1000)}秒`);
+      } else if (this.effectiveBrowseMode === 'all') {
+        log('本帖浏览计划: 全部浏览');
+      } else {
+        log(`本帖浏览计划: ${modeName}`);
+      }
     }
 
     shouldFinishBrowsing() {
@@ -957,6 +999,15 @@
       const returnUrl = getListPathFor(currentList);
 
       log(`返回列表: ${returnUrl}`);
+
+      // 优先尝试 SPA 导航，避免整页刷新
+      if (navigateWithoutReload(returnUrl)) {
+        log('使用无刷新导航返回列表');
+        return;
+      }
+
+      // SPA失败备用刷新
+      log('SPA导航失败，使用页面跳转');
       window.location.href = returnUrl;
     }
   }
