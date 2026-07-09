@@ -86,6 +86,9 @@
   // 点赞开关
   let enableLike = true;
 
+  // 自动浏览运行会话ID，用于彻底取消旧任务
+  let runSessionId = Date.now();
+
   // 点赞概率预设
   const LIKE_CHANCE_PRESETS = {
     low: { name: '低', value: 0.05 },      // 5%
@@ -566,6 +569,7 @@
       this.onStatsUpdate = onStatsUpdate;
       this.scrollController = new ScrollController();
       this.isRunning = false;
+      this.sessionId = runSessionId;
       this.viewedPosts = new Set();
       this.lastLikeTime = 0;
       this.browseStartTime = 0;
@@ -577,6 +581,8 @@
 
     async start() {
       if (this.isRunning) return;
+
+      this.sessionId = runSessionId;
       this.isRunning = true;
 
       const topicId = getCurrentTopicId();
@@ -689,7 +695,10 @@
     async browseAllReplies() {
       log('开始滚动浏览所有回复...');
 
-      while (this.isRunning) {
+      while (
+        this.isRunning &&
+        this.sessionId === runSessionId
+      ) {
         try {
           // 处理当前可见的帖子
           await this.processVisiblePosts();
@@ -874,8 +883,11 @@
       log('准备返回话题列表...');
       await randomDelay(CONFIG.returnToListDelay, CONFIG.returnToListDelay * 1.5);
 
-      if (!this.isRunning) {
-        log('已停止，不返回列表');
+      if (
+        !this.isRunning ||
+        this.sessionId !== runSessionId
+      ) {
+        log('运行已取消，不返回列表');
         return;
       }
 
@@ -895,12 +907,15 @@
       this.onStatsUpdate = onStatsUpdate;
       this.scrollController = new ScrollController();
       this.isRunning = false;
+      this.sessionId = runSessionId;
       this.scannedTopics = new Set();
       this.allViewedStopNotified = false;
     }
 
     async start() {
       if (this.isRunning) return;
+
+      this.sessionId = runSessionId;
       this.isRunning = true;
 
       log('开始在列表中查找未浏览的话题...');
@@ -910,7 +925,11 @@
       let found = await this.findAndEnterUnviewedTopic();
 
       // 如果没找到，滚动加载更多
-      while (this.isRunning && !found) {
+      while (
+        this.isRunning &&
+        this.sessionId === runSessionId &&
+        !found
+      ) {
         try {
           // 更新心跳
           this.onStatsUpdate?.();
@@ -1259,14 +1278,24 @@
 
       // 检查是否需要自动继续
       const autoResume = Storage.get('auto_running', false);
-      log('脚本已加载, auto_running:', autoResume);
+      const savedSession = Storage.get('run_session_id', null);
 
-      if (autoResume) {
+      log('脚本已加载, auto_running:', autoResume, 'session:', savedSession);
+
+      if (autoResume && savedSession) {
         log('检测到自动运行状态，3秒后恢复运行...');
         // 增加延迟确保页面完全加载
         setTimeout(() => {
-          log('自动恢复运行...');
-          this.start();
+          // 检查停止期间是否改变了运行session
+          if (
+            Storage.get('auto_running', false) &&
+            Storage.get('run_session_id') == savedSession
+          ) {
+            log('自动恢复运行...');
+            this.start();
+          } else {
+            log('运行状态已取消，不恢复');
+          }
         }, 3000);
       }
       this.updateStats();
@@ -1896,6 +1925,10 @@
 
     async start() {
       this.isEnabled = true;
+
+      // 创建新的运行会话
+      runSessionId = Date.now();
+      Storage.set('run_session_id', runSessionId);
       Storage.set('auto_running', true);
 
       this.setRunningUI(true, '运行中');
@@ -1956,7 +1989,14 @@
 
     stop() {
       this.isEnabled = false;
+
+      // 让所有旧异步任务失效
+      runSessionId = Date.now();
+      Storage.set('run_session_id', runSessionId);
+
       Storage.set('auto_running', false);
+
+      cancelAllDelays();
 
       // 立即打断所有等待中的随机延迟
       cancelAllDelays();
