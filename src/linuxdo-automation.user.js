@@ -270,6 +270,19 @@
   // ==================== 工具函数 ====================
 
   function log(...args) {
+    const message = args.map(v => {
+      if (typeof v === 'object') {
+        try {
+          return JSON.stringify(v);
+        } catch {
+          return String(v);
+        }
+      }
+      return String(v);
+    }).join(' ');
+
+    UILogger.add(message);
+
     if (CONFIG.debug) {
       console.log('[LinuxDo自动化]', new Date().toLocaleTimeString(), ...args);
     }
@@ -304,6 +317,52 @@
   function randomInt(min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
   }
+
+  // ==================== UI日志系统 ====================
+
+  const UILogger = {
+    logs: [],
+
+    add(message, type = 'info') {
+      this.logs.unshift({
+        time: new Date().toLocaleTimeString(),
+        message,
+        type
+      });
+
+      if (this.logs.length > 50) {
+        this.logs.pop();
+      }
+
+      Storage.set('ui_logs', this.logs);
+      this.render();
+    },
+
+    clear() {
+      this.logs = [];
+      Storage.set('ui_logs', this.logs);
+      this.render();
+    },
+
+    render() {
+      const box = document.getElementById('auto-log-list');
+      if (!box) return;
+
+      box.innerHTML = this.logs.map(item => {
+        return `
+          <div class="log-item log-${item.type}">
+            <span>${item.time}</span>
+            ${item.message}
+          </div>
+        `;
+      }).join('');
+
+      box.scrollTop = 0;
+
+      const countEl = document.getElementById('auto-log-count');
+      if (countEl) countEl.textContent = String(this.logs.length);
+    }
+  };
 
     // 登录状态三态检测：true=已登录，false=未登录，null=无法判定（页面未就绪或 Cloudflare 挑战页）
   // 优先读取 #data-preloaded（服务端直出，脚本注入时必然存在），
@@ -402,6 +461,9 @@
   currentPostMax = Storage.get('post_max', 20);
   currentTimeMin = Storage.get('time_min', 5);
   currentTimeMax = Storage.get('time_max', 20);
+
+  // Storage 初始化后再恢复 UI 日志，避免 Storage 未定义时报错
+  UILogger.logs = Storage.get('ui_logs', []);
 
   // ==================== 浏览记录管理 ====================
 
@@ -1280,7 +1342,7 @@
       const autoResume = Storage.get('auto_running', false);
       const savedSession = Storage.get('run_session_id', null);
 
-      log('脚本已加载, auto_running:', autoResume, 'session:', savedSession);
+      log(`脚本已加载，自动恢复：${autoResume ? '开启' : '关闭'}，会话：${savedSession || '无'}`);
 
       if (autoResume && savedSession) {
         log('检测到自动运行状态，3秒后恢复运行...');
@@ -1556,6 +1618,135 @@
           border-top: 1px solid rgba(255,255,255,0.10);
         }
 
+
+        #linuxdo-auto-panel {
+          overflow: visible;
+        }
+
+        #linuxdo-auto-panel.minimized .log-section {
+          display: none !important;
+        }
+
+        #linuxdo-auto-panel .btn-log-toggle {
+          background: rgba(255,255,255,0.10);
+          color: rgba(255,255,255,0.9);
+          border: 1px solid rgba(255,255,255,0.10);
+        }
+
+        #linuxdo-auto-panel .log-section {
+          position: absolute;
+          top: 0;
+          width: 320px;
+          height: 100%;
+          min-height: 420px;
+          display: none;
+          flex-direction: column;
+          background: rgba(22, 24, 32, 0.96);
+          backdrop-filter: blur(14px);
+          border: 1px solid rgba(255,255,255,0.12);
+          border-radius: 18px;
+          box-shadow: 0 14px 42px rgba(0,0,0,0.34);
+          overflow: hidden;
+          z-index: -1;
+        }
+
+        #linuxdo-auto-panel.log-open .log-section {
+          display: flex;
+        }
+
+        #linuxdo-auto-panel.log-left .log-section {
+          right: 100%;
+        }
+
+        #linuxdo-auto-panel.log-right .log-section {
+          left: 100%;
+        }
+
+        #linuxdo-auto-panel .log-header {
+          height: 44px;
+          flex: 0 0 44px;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 0 12px;
+          border-bottom: 1px solid rgba(255,255,255,0.10);
+          color: rgba(255,255,255,0.92);
+          font-size: 13px;
+          font-weight: 700;
+          user-select: none;
+        }
+
+        #linuxdo-auto-panel .log-header-left {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+        }
+
+        #linuxdo-auto-panel .log-actions {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+        }
+
+        #linuxdo-auto-panel .log-count {
+          color: rgba(255,255,255,0.48);
+          font-size: 11px;
+          font-weight: 600;
+        }
+
+        #linuxdo-auto-panel .log-clear,
+        #linuxdo-auto-panel .log-close {
+          border: none;
+          background: rgba(255,255,255,0.10);
+          color: rgba(255,255,255,0.82);
+          border-radius: 8px;
+          padding: 4px 8px;
+          font-size: 11px;
+          cursor: pointer;
+        }
+
+        #linuxdo-auto-panel .log-clear:hover,
+        #linuxdo-auto-panel .log-close:hover {
+          background: rgba(255,255,255,0.18);
+        }
+
+        #linuxdo-auto-panel .log-content {
+          flex: 1;
+          overflow-y: auto;
+          padding: 10px;
+          font-size: 11px;
+          line-height: 1.55;
+        }
+
+        #linuxdo-auto-panel .log-content::-webkit-scrollbar {
+          width: 4px;
+        }
+
+        #linuxdo-auto-panel .log-content::-webkit-scrollbar-track {
+          background: transparent;
+        }
+
+        #linuxdo-auto-panel .log-content::-webkit-scrollbar-thumb {
+          background: rgba(255,255,255,0.22);
+          border-radius: 999px;
+        }
+
+        #linuxdo-auto-panel .log-item {
+          padding: 6px 8px;
+          margin-bottom: 6px;
+          border-radius: 9px;
+          background: rgba(255,255,255,0.055);
+          color: rgba(255,255,255,0.76);
+          word-break: break-word;
+        }
+
+        #linuxdo-auto-panel .log-item span {
+          display: inline-block;
+          margin-right: 6px;
+          color: rgba(255,255,255,0.42);
+          font-variant-numeric: tabular-nums;
+        }
+
         #linuxdo-auto-panel button.action-btn {
           width: 100%;
           padding: 9px 10px;
@@ -1706,7 +1897,23 @@
             <button class="action-btn btn-start" id="btn-auto-start">开始自动浏览</button>
             <button class="action-btn btn-stop" id="btn-auto-stop" style="display:none;">停止运行</button>
             <button class="action-btn btn-clear" id="btn-clear-history">清除浏览记录</button>
+            <button class="action-btn btn-log-toggle" id="auto-log-toggle">运行日志</button>
           </div>
+
+        </div>
+
+        <div class="log-section" id="auto-log-drawer">
+          <div class="log-header">
+            <div class="log-header-left">
+              <span>📋 运行日志</span>
+              <span class="log-count">(<span id="auto-log-count">0</span>)</span>
+            </div>
+            <div class="log-actions">
+              <button class="log-clear" id="auto-log-clear">清空</button>
+              <button class="log-close" id="auto-log-close">关闭</button>
+            </div>
+          </div>
+          <div class="log-content" id="auto-log-list"></div>
         </div>
       `;
 
@@ -1721,6 +1928,23 @@
       document.getElementById('btn-auto-stop').addEventListener('click', () => this.stop());
       document.getElementById('btn-minimize').addEventListener('click', () => this.toggleMinimize());
       document.getElementById('btn-clear-history').addEventListener('click', () => this.clearHistory());
+
+      document.getElementById('auto-log-toggle')?.addEventListener('click', () => {
+        this.toggleLogDrawer();
+      });
+
+      document.getElementById('auto-log-close')?.addEventListener('click', () => {
+        this.panel.classList.remove('log-open');
+        Storage.set('log_drawer_open', false);
+      });
+
+      document.getElementById('auto-log-clear')?.addEventListener('click', () => {
+        UILogger.clear();
+      });
+
+      UILogger.render();
+
+
 
       // 速度选择按钮事件
       document.querySelectorAll('.speed-btn[data-speed]').forEach(btn => {
@@ -1803,6 +2027,14 @@
     toggleMinimize() {
       this.panel.classList.toggle('minimized');
       const minimized = this.panel.classList.contains('minimized');
+
+      if (minimized) {
+        this.panel.classList.remove('log-open');
+      } else if (Storage.get('log_drawer_open', false)) {
+        this.updateLogDrawerDirection();
+        this.panel.classList.add('log-open');
+        UILogger.render();
+      }
       document.getElementById('btn-minimize').textContent = minimized ? '+' : '-';
       Storage.set('panel_minimized', minimized);
     }
@@ -1821,6 +2053,12 @@
         this.panel.classList.add('minimized');
         const btn = document.getElementById('btn-minimize');
         if (btn) btn.textContent = '+';
+      }
+
+      if (!minimized && Storage.get('log_drawer_open', false)) {
+        this.updateLogDrawerDirection();
+        this.panel.classList.add('log-open');
+        UILogger.render();
       }
     }
 
@@ -1866,6 +2104,10 @@
       header.addEventListener('pointermove', (e) => {
         if (!dragging) return;
         movePanel(e.clientX, e.clientY);
+
+        if (this.panel.classList.contains('log-open')) {
+          this.updateLogDrawerDirection();
+        }
       });
     
       header.addEventListener('pointerup', (e) => {
@@ -1915,6 +2157,42 @@
       setTimeout(() => {
         toast.remove();
       }, 3500);
+    }
+
+    updateLogDrawerDirection() {
+      if (!this.panel) return;
+
+      const rect = this.panel.getBoundingClientRect();
+      const panelCenter = rect.left + rect.width / 2;
+      const screenCenter = window.innerWidth / 2;
+
+      this.panel.classList.remove('log-left', 'log-right');
+
+      // 以浏览器中心为准：助手在右半边，日志向左；助手在左半边，日志向右
+      if (panelCenter >= screenCenter) {
+        this.panel.classList.add('log-left');
+      } else {
+        this.panel.classList.add('log-right');
+      }
+    }
+
+    toggleLogDrawer() {
+      if (!this.panel) return;
+
+      if (this.panel.classList.contains('minimized')) {
+        this.panel.classList.remove('minimized');
+        Storage.set('panel_minimized', false);
+
+        const btn = document.getElementById('btn-minimize');
+        if (btn) btn.textContent = '-';
+      }
+
+      this.updateLogDrawerDirection();
+      this.panel.classList.toggle('log-open');
+
+      Storage.set('log_drawer_open', this.panel.classList.contains('log-open'));
+
+      UILogger.render();
     }
 
     updateStats() {
